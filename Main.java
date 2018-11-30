@@ -1,86 +1,148 @@
-//
-//class Main{
-//    private String name;
-//    private int age;
-//    public Main(String name,int age){
-//        this.name=name;
-//        this.age=age;
-//    }
-//
-//    public int getAge() {
-//        return age;
-//    }
-//
-//    public void setAge(int age) {
-//        this.age = age;
-//    }
-//
-//    public String getName() {
-//        return name;
-//    }
-//
-//    public void setName(String name) {
-//        this.name = name;
-//    }
-//}
-//import java.sql.Connection;
-//import java.sql.ResultSet;
-//import java.sql.SQLException;import java.sql.Statement;
-//public class Main {
-//    Connection con;
-//    Statement statement;
-//    ResultSet rs;
-//    public Connection getCon() {
-//        return con;
-//    }
-//}
-//public Statement getStatement() {
-//    return statement;
-//}
-//public ResultSet getRs() {
-//    return rs;
-//}
-//public Main(Connection con) {
-//    this.con = con;
-//    try {
-//        statement = con.createStatement();
-//    } catch (SQLException e) {
-//        e.printStackTrace();
-//    }
-//}
-//public void createTable() throws SQLException {
-//    String sql = "create table if not exists test(id int,name varchar(100))"statement.executeUpdate(sql);
-//}
-//public void insert() throws SQLException {
-//    String sql1 = "insert into test values(1,'tom')";
-//    String sql2 = "insert into test values(2,'张三')";
-//    String sql3 = "insert into test values(3,'999')";
-//    statement.addBatch(sql1);
-//    statement.addBatch(sql2);
-//    statement.addBatch(sql3);
-//    int[] results = statement.executeBatch();
-//}
-//public void select() throws SQLException {
-//    String sql = "select id,name from test";
-//    rs = statement.executeQuery(sql);
-//    while (rs.next()) {
-//        String id = rs.getString("id");
-//        String name = rs.getString("name");
-//        System.out.println(id+"\t"+name);
-//    }
-//}
-//public static void main(String[] args) {
-//    Connection con = JDBCUtil.getConnection();
-//    Main main = new Main(con);
-//    try {
-//        main.createTable();
-//        main.insert();main.select();
-//    } catch (SQLException e) {
-//        e.printStackTrace();
-//    }finally {
-//        JDBCUtil.close(main.getRs(),main.getStatement(),main.getCon());
-//    }
-//}
+import java.sql.*;
+public class Main {
+static class Student {
+     private String Id;
+     private String Name;
+     private String Sex;
+     private String Age;
 
+     Student(String Name, String Sex, String Age) {
+         this.Id = null; //default
+         this.Name = Name;
+         this.Sex = Sex;
+         this.Age = Age;
+     }
+
+     public String getId() {
+         return Id;
+     }
+
+     public void setId(String Id) {
+         this.Id = Id;
+     }
+
+     public String getName() {
+         return Name;
+     }
+
+     public void setName(String Name) {
+         this.Name = Name;
+     }
+
+     public String getSex() {
+         return Sex;
+     }
+
+     public void setSex(String Sex) {
+         this.Sex = Sex;
+     }
+
+     public String getAge() {
+         return Age;
+     }
+
+     public void setage(String Age) {
+         this.Age = Age;
+     }
+ }
+     private static Connection getConn() {
+         String driver = "com.mysql.jdbc.Driver";
+         String url = "jdbc:mysql://localhost:3306/hello";
+         String username = "root";
+         String password = "";
+         Connection conn = null;
+         try {
+             Class.forName(driver); //classLoader,加载对应驱动
+             conn = (Connection) DriverManager.getConnection(url, username, password);
+         } catch (ClassNotFoundException e) {
+             e.printStackTrace();
+         } catch (SQLException e) {
+             e.printStackTrace();
+         }
+         return conn;
+     }
+    private static int insert(Student student) {
+        Connection conn = getConn();
+        int i = 0;
+        String sql = "insert into students (Name,Sex,Age) values(?,?,?)";
+        PreparedStatement pstmt;
+        try {
+            pstmt = (PreparedStatement) conn.prepareStatement(sql);
+            pstmt.setString(1, student.getName());
+            pstmt.setString(2, student.getSex());
+            pstmt.setString(3, student.getAge());
+            i = pstmt.executeUpdate();
+            pstmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return i;
+    }
+    private static int update(Student student) {
+        Connection conn = getConn();
+        int i = 0;
+        String sql = "update students set Age='" + student.getAge() + "' where Name='" + student.getName() + "'";
+        PreparedStatement pstmt;
+        try {
+            pstmt = (PreparedStatement) conn.prepareStatement(sql);
+            i = pstmt.executeUpdate();
+            System.out.println("resutl: " + i);
+            pstmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return i;
+    }
+    private static Integer getAll() {
+        Connection conn = getConn();
+        String sql = "select * from students";
+        PreparedStatement pstmt;
+        try {
+            pstmt = (PreparedStatement)conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery();
+            int col = rs.getMetaData().getColumnCount();
+            System.out.println("============================");
+            while (rs.next()) {
+                for (int i = 1; i <= col; i++) {
+                    System.out.print(rs.getString(i) + "\t");
+                    if ((i == 2) && (rs.getString(i).length() < 8)) {
+                        System.out.print("\t");
+                    }
+                }
+                System.out.println("");
+            }
+            System.out.println("============================");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    private static int delete(String name) {
+        Connection conn = getConn();
+        int i = 0;
+        String sql = "delete from students where Name='" + name + "'";
+        Statement pstmt;
+        try {
+            pstmt =  conn.prepareStatement(sql);
+            i =  pstmt.executeUpdate();
+            System.out.println("resutl: " + i);
+            pstmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return i;
+    }
+    public static void main(String args[]) {
+        Main.getAll();
+        Main.insert(new Student("公立政", "Male", "14"));
+        Main.getAll();
+        Main.update(new Student("Teddy", "", "7"));
+        Main.delete("Teddy");
+        Main.getAll();
+    }
+}
 
 
